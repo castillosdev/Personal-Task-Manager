@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FE - Interview Project</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-cyan-500 to-green-500 h-screen px-10 py-4" x-data="taskManager()" x-init="init()" >
+    <h1 class="text-white font-bold text-2xl mb-10">Personal Task Manager</h1>
+    <div class="bg-white rounded-lg text-black p-10">
+        <div class="task-title">
+            <h2 class="text-xl font-normal mb-4">Task Title:</h2>
+            <textarea x-model="newTask.title" class="w-full h-20 border-2 border-gray-300 rounded-lg px-4 py-2" placeholder="Enter task title"></textarea>
+        </div>
+        <div class="task-description">
+            <h2 class="text-xl font-normal mb-4">Task Description:</h2>
+            <textarea x-model="newTask.description" class="w-full h-20 border-2 border-gray-300 rounded-lg px-4 py-2" placeholder="Enter task description"></textarea>
+        </div>
+        <div class="add-task">
+            <button @click="addTask()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-8">
+                Add Task
+            </button>
+        </div>
+    </div>
+    <div class="transition-all duration-300">
+        <div class="flex flex-col justify-between mt-8 bg-white p-10 rounded-lg">
+            <div class="flex mx-6">
+                <button @click="filter = 'all'" :class="{'bg-green-700': filter === 'all', 'bg-green-500': filter !== 'all'}" class="hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-4">
+					All
+				</button>
+				<button @click="filter = 'active'" :class="{'bg-green-700': filter === 'active', 'bg-green-500': filter !== 'active'}" class="hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-4">
+					Active
+				</button>
+				<button @click="filter = 'completed'" :class="{'bg-green-700': filter === 'completed', 'bg-green-500': filter !== 'completed'}" class="hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+					Completed
+				</button>	
+            </div>
+            <template x-for="(task, index) in filteredTasks" :key="index">
+                <div class="flex bg-gray-100 p-6 m-6 rounded-lg relative">
+                    <div class="w-6 flex-shrink-0 mr-4">
+                        <input type="checkbox" x-model="task.completed" class="h-4 w-4 rounded focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex-1">
+						<h2 :class="{'font-bold mb-4 text-xl line-through': filter === 'completed' || (filter === 'all' && task.completed), 'font-bold mb-4 text-xl': filter === 'active' || !task.completed}" x-text="task.title"></h2>
+						<p :class="{'font-normal mb-4 text-xl line-through': filter === 'completed' || (filter === 'all' && task.completed), 'font-normal mb-4 text-xl': filter === 'active' || !task.completed}" x-text="task.description"></p>
+                    </div>
+                    <div class="w-6 flex-shrink-0 ml-4">
+                        <button @click="removeTask(index)" class="rounded-full w-6 h-6 flex items-center justify-center focus:outline-none">
+                            <span class="text-red-500 font-bold text-lg leading-none">x</span>
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    <script>
+function taskManager() {
+    return {
+        newTask: { title: '', description: '', completed: false },
+        tasks: [],
+        filter: 'all',
+        addTask() {
+            if (this.newTask.title.trim() === '') return;
+            this.tasks.push({ ...this.newTask });
+            this.newTask.title = '';
+            this.newTask.description = '';
+            this.saveTasks();
+        },
+        removeTask(index) {
+            this.tasks.splice(index, 1);
+            this.saveTasks();
+        },
+        get filteredTasks() {
+            if (this.filter === 'all') return this.tasks;
+            return this.tasks.filter(task => task.completed === (this.filter === 'completed'));
+        },
+        saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(this.tasks));
+        },
+        loadTasks() {
+            const storedTasks = localStorage.getItem('tasks');
+            if (storedTasks) {
+                this.tasks = JSON.parse(storedTasks);
+            }
+        },
+        init() {
+            this.loadTasks();
+			this.watchTasks();
+        },
+        watchTasks() {
+            this.$watch('tasks', () => {
+                this.saveTasks();
+            }, { deep: true });
+        }
+    }
+}
+
+    </script>
+</body>
+</html>
